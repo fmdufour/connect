@@ -3,7 +3,7 @@
 
 
 void lcd(comando *cmd) {	
-
+	printf("Arquivo %s\n", cmd->arq);
 	if ((chdir ((char*) cmd->arq)) == 0) {		
 	} else {
 			printf ("Diretorio %s nao existe\n", cmd->arq);
@@ -15,6 +15,9 @@ void lls(comando *cmd) {
 	DIR *d;
 	struct dirent *ent;
 	int i = 0;
+	int j = 0;
+	char *perm;
+	struct stat statbuf;
 
   	d = opendir(".");
 
@@ -22,17 +25,45 @@ void lls(comando *cmd) {
   	{
 	    while ((ent = readdir(d)) != NULL)
     	{
-    		if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
-    			continue;
+    		//se nao estiver marcado o all no ls retira os arquivos ocultos
+    		if(!(cmd->opcao == ALL) &&
+    			(!strcmp(ent->d_name, ".") 
+    			|| !strcmp(ent->d_name, "..")
+    			|| ent->d_name[0] == '.')) 
+    				continue;    		    	
 
+    		if(stat(ent->d_name,&statbuf) < 0){				
+				printf("erro ao recuperar atributos arquivo\n");    			
+				return;
+    		}
 
-    		i++;
-      		printf("%s %d %s    ", get_permissoes_arq(ent->d_name),get_links(ent->d_name), ent->d_name);
+    		if(cmd->opcao == LIST || cmd->opcao == ALL){
+    			printf("%s %d %s %s ", 
+	      			get_permissoes_arq(statbuf) ,
+	      			get_links(statbuf), 
+	      			get_owner(statbuf),
+	      			get_group(statbuf));
+	      			
+    			    //adiciona espacos para formatar o tamanho do arquivo
+		    	while(j++ < 11 - strlen(get_file_size(statbuf)))
+		    		printf(" ");
 
-      		if(i % 4 == 0) printf("\n");
+		    	printf(" %s %s %s\n",
+		    		get_file_size(statbuf),
+	      			get_date(statbuf),
+	      			ent->d_name);
+
+		    	j = 0;
+    		}
+    		else{
+    			printf("%s    ", ent->d_name);
+    			i++;      			
+    		}
+
+    		
     	}
     	//coloca uma quebra de linha caso já nao tenha colocado
-    	if (i % 4 != 0) printf("\n");
+    	if (cmd->opcao < LIST) printf("\n");
 
     	closedir(d);
   	}  	
@@ -52,7 +83,7 @@ comando* get_comando(){
 
 	cmd = malloc(sizeof(comando));
 		
-	com = strtok(entrada, " ");
+	com = strtok(entrada, " ");	
 
 	com = trimwhitespace(com);	
 

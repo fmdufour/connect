@@ -12,6 +12,13 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
+#include <time.h>
+#include <locale.h>
+#include <langinfo.h>
+#include <stdint.h>
+
 
 
 
@@ -66,8 +73,12 @@ void start_client();
 //UTIL
 void get_diretorio_atual(char* cwd);
 char* trimwhitespace(char *str);
-char* get_permissoes_arq(char *nome_arq);
-int get_links(char *nome_arq);
+char* get_permissoes_arq(struct stat statbuf);
+int get_links(struct stat statbuf);
+char* get_owner(struct stat statbuf);
+char* get_group(struct stat statbuf);
+char* get_file_size(struct stat statbuf);
+char* get_date(struct stat statbuf);
 
 void print_help();
 void print_options();

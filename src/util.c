@@ -55,35 +55,80 @@ char *trimwhitespace(char *str)
   return str;
 }
 
-char * get_permissoes_arq(char *nome_arq){
-    struct stat fileStat;
-    char perm[11];
+char * get_permissoes_arq(struct stat statbuf){
+    char *perm;
 
-    if(stat(nome_arq,&fileStat) < 0)    
-	    return "erro perm ";        
+    perm = malloc(sizeof(char)*11);
 
-    perm[0] = (S_ISDIR(fileStat.st_mode)) ? 'd' : '-';
-    perm[1] = fileStat.st_mode & S_IRUSR ? 'r' : '-';
-    perm[2] = fileStat.st_mode & S_IWUSR ? 'w' : '-';
-    perm[3] = fileStat.st_mode & S_IXUSR ? 'x' : '-';
-    perm[4] = fileStat.st_mode & S_IRGRP ? 'r' : '-';
-    perm[5] = fileStat.st_mode & S_IWGRP ? 'w' : '-';
-    perm[6] = fileStat.st_mode & S_IXGRP ? 'x' : '-';
-    perm[7] = fileStat.st_mode & S_IROTH ? 'r' : '-';
-    perm[8] = fileStat.st_mode & S_IWOTH ? 'w' : '-';
-    perm[9] = fileStat.st_mode & S_IXOTH ? 'x' : '-';
+    perm[0] = (S_ISDIR(statbuf.st_mode)) ? 'd' : '-';
+    perm[1] = statbuf.st_mode & S_IRUSR ? 'r' : '-';
+    perm[2] = statbuf.st_mode & S_IWUSR ? 'w' : '-';
+    perm[3] = statbuf.st_mode & S_IXUSR ? 'x' : '-';
+    perm[4] = statbuf.st_mode & S_IRGRP ? 'r' : '-';
+    perm[5] = statbuf.st_mode & S_IWGRP ? 'w' : '-';
+    perm[6] = statbuf.st_mode & S_IXGRP ? 'x' : '-';
+    perm[7] = statbuf.st_mode & S_IROTH ? 'r' : '-';
+    perm[8] = statbuf.st_mode & S_IWOTH ? 'w' : '-';
+    perm[9] = statbuf.st_mode & S_IXOTH ? 'x' : '-';
 	perm[10] = '\0';
-
+	
 	return perm;
 }
 
-int get_links(char *nome_arq){
-	struct stat statbuf;
-
-	if(stat(nome_arq,&statbuf) < 0)
-		return 'x';
-
+int get_links(struct stat statbuf){
 	return statbuf.st_nlink;
 }
+
+char* get_owner(struct stat statbuf){
+	struct passwd  *pwd;
+	
+	if ((pwd = getpwuid(statbuf.st_uid)) != NULL)
+	    return (char*)pwd->pw_name;
+	else
+	    return (char*)statbuf.st_uid;
+}
+
+char* get_group(struct stat statbuf){
+	struct group *grp;
+
+	if ((grp = getgrgid(statbuf.st_gid)) != NULL)
+        return grp->gr_name;
+    else
+        return statbuf.st_gid;
+
+}
+
+char* get_file_size(struct stat statbuf){
+	int i;
+	char *tam = malloc(sizeof(char)*11);
+
+	sprintf(tam, "%d", statbuf.st_size);
+	
+	return tam;
+}
+
+char* get_date(struct stat statbuf){	
+	struct tm      *tm;
+	int i = 0;
+	char datestring[255];
+
+	char *data = malloc(sizeof(char) * 100);
+
+    tm = localtime(&statbuf.st_mtime);
+
+    /* Get localized date string. */
+    strftime(datestring, sizeof(datestring), nl_langinfo(D_T_FMT), tm);
+
+    for(i = 4; i <=15;i++)
+    	data[i-4] = datestring[i];
+
+    data[i-4] = '\0';
+
+    //sprintf(data, "%s %s", datestring, dp->d_name);
+
+    return data;
+}
+
+
 
 

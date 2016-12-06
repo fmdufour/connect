@@ -1,11 +1,40 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <net/ethernet.h>
+#include <linux/if_packet.h>
+#include <linux/if.h>
+#include <netinet/in.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+
 
 #define DEBUG 1
 #define CLIENT 1
 #define SERVER 2
 #define True 1
 #define False 0
+#define DEVICE "lo"
+
+
+//Comandos
+#define LLS 0
+#define LCD 1
+#define  CD 2
+#define  LS 3
+#define PUT 4
+#define GET 5
+#define INVALIDO 6
+#define LIST 7
+#define ALL 8
+#define EXIT 9
+
 
 
 typedef struct _pacote {
@@ -17,9 +46,32 @@ typedef struct _pacote {
 	unsigned char par;
 } *pacote;
 
-void print_help();
-void print_options_server();
-void print_options_client();
-int modo_exec_valido(char **argc);
+typedef struct _comando{
+	int tipo;
+	int opcao;
+	char *arq;
+} comando;
+
+
+
+
+comando* get_comando();
+void lcd(comando *cmd);
+void lls(comando *cmd);
+
 void start_server();
 void start_client();
+
+
+//UTIL
+void get_diretorio_atual(char* cwd);
+char* trimwhitespace(char *str);
+char* get_permissoes_arq(char *nome_arq);
+int get_links(char *nome_arq);
+
+void print_help();
+void print_options();
+int modo_exec_valido(char **argc);
+
+//SOCKET
+int socket_create (const char *device);

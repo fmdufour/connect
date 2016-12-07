@@ -20,7 +20,7 @@ unsigned char* bufferiza_pacote(pacote* p){
 	unsigned char *buffer;
 	int i;
 
-	buffer = malloc(sizeof(unsigned char) * p->tam + (8*4));
+	buffer = malloc(sizeof(unsigned char) * (p->tam + 4));
 
 	buffer[0] = p->marca;
 	buffer[1] = p->tam << 2;
@@ -36,8 +36,37 @@ unsigned char* bufferiza_pacote(pacote* p){
 	return buffer;
 }
 
+pacote* desbufferiza_pacote(unsigned char *buffer){
+	int i;
+	pacote *p = malloc(sizeof(pacote));
+
+	p->marca = buffer[0];
+	p->tam = buffer[1] >> 2;
+	p->seq = buffer[1] << 3;
+	p->seq |= buffer[2] >> 5;
+	p->tipo = buffer[2] & 0x1F;
+	p->dados = malloc(sizeof(unsigned char) * p->tam);
+	for(int i=0; i < p->tam; i++){
+		p->dados[i] = buffer[i+3];
+	}
+	//CRC
+	//buffer[i+4] = "0xFF";
+	return p;
+}
+
+void print_pacote(pacote *p){
+	printf("Marca %s\n", int2bin(p->marca, 8));
+	printf("Tamanho %s\n", int2bin(p->tam, 8));
+	printf("Sequencia %s\n", int2bin(p->seq, 8));
+	printf("Tipo %s\n", int2bin(p->tipo, 8));
+}
+
 int envia_pacote(int socket, pacote *p){
 	int i = 0;
+
+
+	print_pacote(p);
+
 
 	printf("antes bufferizar pacote\n");
 	unsigned char *buff = bufferiza_pacote(p);
@@ -56,17 +85,23 @@ int envia_pacote(int socket, pacote *p){
 
 
 pacote* recebe_pacote(int socket){
-	pacote p;
+	pacote *p;
 	unsigned char *buffer = malloc (MAX_PACOTE * sizeof(char));
       
     while (1) {    	
+
+    	printf("Esperando pacote...\n");
 		if ((recv (socket, buffer, MAX_PACOTE, 0)) < 0) {
 			printf("Erro RECV -> recebe_pacote()\n");
 			continue;
 		}
 
 		printf("Pacote Recebido");
-		//p = desbufferiza_pacote(buffer);
+
+		p = desbufferiza_pacote(buffer);
+
+		print_pacote(p);
+
 
 	/*		if (p->marca != MARCA)
 			continue;

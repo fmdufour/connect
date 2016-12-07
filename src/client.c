@@ -11,6 +11,7 @@ void start_client(){
 
 	printf("Client conectado...\n");
 	
+	print_options();
 	      		
 	while(1){
 		get_diretorio_atual(cwd);
@@ -24,7 +25,7 @@ void start_client(){
 				
 				break;
 			case CD:
-
+				cd(socket, cmd);
 				break;
 			case LLS:
 				lls(cmd);

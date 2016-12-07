@@ -1,22 +1,16 @@
 #include "main.h"
 
-void printHelp(){
-	printf("Digite os parametros no seguinte formato:\n");
-	printf("Digite os parametros no seguinte formato:\n");
-	printf("Digite os parametros no seguinte formato:\n");
-	printf("Digite os parametros no seguinte formato:\n");
-	printf("Digite os parametros no seguinte formato:\n");
-	printf("Digite os parametros no seguinte formato:\n");
-	printf("Digite os parametros no seguinte formato:\n");
-	
-}
 
 void print_options(){
+	printf("----------------------\n");
 	printf("Comandos disponiveis:\n");
-	printf("Comandos disponiveis:\n");
-	printf("Comandos disponiveis:\n");
-	printf("Comandos disponiveis:\n");
-
+	printf("ls [-l | -la]\n");
+	printf("cd <pasta>\n");
+	printf("lls [-l | -ls]\n");
+	printf("lcd <pasta>\n");
+	printf("get <arquivo>\n");
+	printf("put <arquivo>\n");
+	printf("----------------------\n");	
 }
 
 int modo_exec_valido(char **argc){

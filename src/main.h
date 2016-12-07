@@ -20,38 +20,43 @@
 #include <stdint.h>
 
 
-
-
 #define DEBUG 1
 #define CLIENT 1
 #define SERVER 2
 #define True 1
 #define False 0
+
 #define DEVICE "lo"
 
 
 //Comandos
-#define LLS 0
-#define LCD 1
-#define  CD 2
-#define  LS 3
-#define PUT 4
-#define GET 5
-#define INVALIDO 6
-#define LIST 7
-#define ALL 8
-#define EXIT 9
+#define LLS 55
+#define LCD 56
+#define INVALIDO 57
+#define LIST 58
+#define ALL 59
+#define EXIT 60
 
-
-
-typedef struct _pacote {
-	unsigned char init;
-	unsigned char size;
-	unsigned char seq;
-	unsigned char type;
-	unsigned char *data;
-	unsigned char par;
-} *pacote;
+//tipos pacote
+#define ACK  0
+#define NACK 1
+#define OK   2
+#define CD   10
+#define LS   11
+#define PUT  12
+#define PUTM 13
+#define GET 14
+#define NOME_ARQ 22
+#define DADOS 5
+#define ERR  31
+#define MOSTRA 20
+#define FIM_TXT  7
+#define FIM_TXT_GRP 8
+//marca inicio mensagem
+#define MARCA 126
+#define MAX_DADOS 63
+#define MAX_SEQ 31
+#define MAX_PACOTE 67
 
 typedef struct _comando{
 	int tipo;
@@ -59,8 +64,14 @@ typedef struct _comando{
 	char *arq;
 } comando;
 
-
-
+typedef struct pacote{
+	unsigned char marca;
+	unsigned char tam;
+	unsigned char seq;
+	unsigned char tipo;
+	unsigned char *dados;
+	unsigned char crc;
+}pacote;
 
 comando* get_comando();
 void lcd(comando *cmd);
@@ -86,3 +97,6 @@ int modo_exec_valido(char **argc);
 
 //SOCKET
 int socket_create (const char *device);
+
+//PROTOCOL
+//pacote *monta_pacote(int tipo, char *dados, int tamanho);

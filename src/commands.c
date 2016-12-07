@@ -2,8 +2,19 @@
 
 
 
+void cd(int socket, comando *cmd){
+	printf("Executando comando CD -> Remoto\n");
+
+	pacote *p = monta_pacote(CD, (unsigned char*)cmd->arq, sizeof(cmd->arq));
+
+	printf("Montou pacote\n");
+
+	envia_pacote(socket, p);
+
+	printf("CD: pacote enviado\n");
+}
+
 void lcd(comando *cmd) {	
-	printf("Arquivo %s\n", cmd->arq);
 	if ((chdir ((char*) cmd->arq)) == 0) {		
 	} else {
 			printf ("Diretorio %s nao existe\n", cmd->arq);
@@ -21,14 +32,11 @@ void lls(comando *cmd) {
 
   	d = opendir(".");
 
-  	if (d)
-  	{
-	    while ((ent = readdir(d)) != NULL)
-    	{
+  	if (d){
+	    while ((ent = readdir(d)) != NULL){
     		//se nao estiver marcado o all no ls retira os arquivos ocultos
     		if(!(cmd->opcao == ALL) &&
-    			(!strcmp(ent->d_name, ".") 
-    			|| !strcmp(ent->d_name, "..")
+    			(!strcmp(ent->d_name, "..")
     			|| ent->d_name[0] == '.')) 
     				continue;    		    	
 
@@ -59,16 +67,11 @@ void lls(comando *cmd) {
     			printf("%s    ", ent->d_name);
     			i++;      			
     		}
-
-    		
     	}
     	//coloca uma quebra de linha caso já nao tenha colocado
     	if (cmd->opcao < LIST) printf("\n");
-
     	closedir(d);
   	}  	
-
-
 }
 
 
@@ -77,8 +80,11 @@ void lls(comando *cmd) {
 
 comando* get_comando(){
 	comando *cmd;
-	char entrada[1024];	
+	char *entrada;	
 	char *com;	
+
+	entrada = malloc(sizeof(char) * 1024);
+
 	gets(entrada);
 
 	cmd = malloc(sizeof(comando));
@@ -93,7 +99,6 @@ comando* get_comando(){
 		cmd->tipo = LCD;
 	else if(!strcmp(com, "cd")){
 		cmd->tipo = CD;		
-		return cmd;
 	}
 	else if(!strcmp(com, "ls")){
 		cmd->tipo = LS;

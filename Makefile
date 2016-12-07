@@ -6,7 +6,8 @@ all:
 		src/client.c \
 		src/util.c	\
 		src/commands.c \
-		src/socket.c
+		src/socket.c \
+		src/protocol.c
 		
 
 clean:

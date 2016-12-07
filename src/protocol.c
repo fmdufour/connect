@@ -43,8 +43,7 @@ int envia_pacote(int socket, pacote *p){
 	unsigned char *buff = bufferiza_pacote(p);
 
 	printf("indo enviar pacote\n");
-	if ((send (socket, p, MAX_PACOTE, 0)) == -1) {
-		printf("Deu tretaaa\n");
+	if ((send (socket, buff, MAX_PACOTE, 0)) == -1) {		
 		perror("send");
 		//printf("erro: send: %s\n", strerror(errno));
 		//usleep (random * PACKET_TIME);
@@ -58,10 +57,9 @@ int envia_pacote(int socket, pacote *p){
 
 pacote* recebe_pacote(int socket){
 	pacote p;
-	unsigned char *buffer = malloc (MAX_PACOTE);
-   
-    while (1) {
-
+	unsigned char *buffer = malloc (MAX_PACOTE * sizeof(char));
+      
+    while (1) {    	
 		if ((recv (socket, buffer, MAX_PACOTE, 0)) < 0) {
 			printf("Erro RECV -> recebe_pacote()\n");
 			continue;

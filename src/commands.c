@@ -131,7 +131,8 @@ comando* get_comando(){
 
 	//se pediu get ou put e não informou o arquivo
 	if((cmd->tipo == GET || cmd->tipo == PUT 
-		|| cmd->tipo == LCD || cmd->tipo== CD) && cmd->arq == NULL)
+		|| cmd->tipo == LCD || cmd->tipo== CD) 
+			&& cmd->arq == NULL)
 		cmd->tipo = INVALIDO;			
 
 	return cmd;

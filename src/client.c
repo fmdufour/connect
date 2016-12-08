@@ -34,7 +34,7 @@ void start_client(){
 				lcd(cmd);
 				break;
 			case GET:
-				get(socket, cmd);
+				get(socket, cmd->arq);
 				break;
 			case PUT:
 				put(socket, cmd->arq);				

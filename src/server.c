@@ -38,6 +38,7 @@ void start_server(){
             case PUT:
                 break;
             case GET:
+                printf("arquivo %s\n", p->dados);
                 put(socket, p->dados);
                 break;
 

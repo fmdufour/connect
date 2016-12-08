@@ -1,4 +1,4 @@
-#include "main.h"
+#include "main.h"x
 #include <limits.h>
 
 char * int2bin(unsigned i, int tam)
@@ -25,8 +25,26 @@ void start_server(){
 	printf("Maquina conectada em modo server\n");
 
 	socket = socket_create(DEVICE);
+    while(1){
+        p = recebe_pacote(socket);
 
-	p = recebe_pacote(socket);
-	
+        switch(p->tipo){
+            case LS:
+                server_ls(socket, p->dados);
+                break;
+            case CD:
+                server_cd(socket, p->dados);
+                break;
+            case PUT:
+                break;
+            case GET:
+                put(socket, p->dados);
+                break;
+
+        }
+        free(p->dados);
+        free(p);
+    }
 }
+
 

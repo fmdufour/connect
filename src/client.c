@@ -22,7 +22,7 @@ void start_client(){
 
 		switch(cmd->tipo){
 			case LS:
-				
+				ls(socket, cmd);
 				break;
 			case CD:
 				cd(socket, cmd);
@@ -34,8 +34,10 @@ void start_client(){
 				lcd(cmd);
 				break;
 			case GET:
+				get(socket, cmd);
 				break;
 			case PUT:
+				put(socket, cmd->arq);				
 				break;
 			case INVALIDO:
 				printf("Comando invalido\n");

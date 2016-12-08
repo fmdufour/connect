@@ -101,4 +101,4 @@ int socket_create (const char *device);
 //PROTOCOL
 //pacote *monta_pacote(int tipo, char *dados, int tamanho);
 pacote* recebe_pacote(int socket);
-void transfere_arquivo(int socket, unsigned char * nome_arq);
+void recebe_arquivo(int socket, unsigned char * nome_arq);

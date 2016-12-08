@@ -3,7 +3,7 @@
 
 
 void cd(int socket, comando *cmd){	
-	printf("%s\n", cmd->arq);
+	
 	pacote *p = monta_pacote(CD, (unsigned char*)cmd->arq, strlen(cmd->arq));	
 
 	envia_pacote(socket, p);
@@ -321,6 +321,8 @@ void put(int socket, unsigned char *nome_arq){
 	char *parte;
 	int j = 0;
 
+	parte = malloc(MAX_DADOS);
+
     if ((fp = fopen (nome_arq, "r")) == NULL) {
         printf("Arquivo %s nao existe\n",nome_arq);
         return;
@@ -335,6 +337,9 @@ void put(int socket, unsigned char *nome_arq){
 		
 	rewind (fp);
 
+	//free(p->dados);
+	//free(p);
+
 			
 	while (1) {
 		//pega o que resta do arquivo
@@ -346,7 +351,7 @@ void put(int socket, unsigned char *nome_arq){
 		if (tam_parte > MAX_DADOS)
 			tam_parte = MAX_DADOS;
 
-		parte = malloc(sizeof(tam_parte));
+		//parte = malloc(sizeof(tam_parte) + 1);
 
 		fread (parte, 1, tam_parte, fp);
 
@@ -354,13 +359,14 @@ void put(int socket, unsigned char *nome_arq){
 		
 		envia_pacote(socket, p);
 
-		free(p->dados);
-		free(p);			
+		//free(parte);
+		//free(p->dados);
+		//free(p);			
 	}
 
 	fclose (fp);	
 
-	p = monta_pacote(FIM_TXT, "",1);
+	p = monta_pacote(FIM_TXT, &tam_arq,1);
 
 	envia_pacote(socket, p);		
 
@@ -373,10 +379,10 @@ void get(int socket, unsigned char* nome_arq){
 
 	envia_pacote(socket, p);
 
-	transfere_arquivo(socket, nome_arq);
+	recebe_arquivo(socket, nome_arq);
 }
 
-void transfere_arquivo(int socket, unsigned char *nome_arq) {
+void recebe_arquivo(int socket, unsigned char *nome_arq) {
 
 	long int tam_arq;
 	pacote *p;
@@ -394,20 +400,20 @@ void transfere_arquivo(int socket, unsigned char *nome_arq) {
 		p = recebe_pacote(socket);
 
 		if (p->tipo == DADOS)
-			fwrite (p->dados, 1, p->dados, fp);
+			fwrite (p->dados, 1, p->tam, fp);
 
 		else if (p->tipo == FIM_TXT) {
-			tam_arq = atol ((char *) p->dados);
+			tam_arq = atol ((unsigned char *) p->dados);
 			break;
 		}
+
+		//free(p->dados);
+		//free(p);
 	}
 
     fseek (fp, 0, SEEK_END);
 
-    if (tam_arq != ftell(fp))
-		printf ("Erro na transferencia, tamanhos diferentes\n");
-	else
-		printf ("Arquivo %s transferido com sucesso\n", nome_arq);
+	printf ("Arquivo %s transferido com sucesso\n", nome_arq);
 
 	fclose (fp);
 

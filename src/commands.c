@@ -2,9 +2,9 @@
 
 
 
-void cd(int socket, comando *cmd){	
-	
-	pacote *p = monta_pacote(CD, (unsigned char*)cmd->arq, strlen(cmd->arq));	
+void cd(int socket, comando *cmd){
+
+	pacote *p = monta_pacote(CD, (unsigned char*)cmd->arq, strlen(cmd->arq));
 
 	envia_pacote(socket, p);
 
@@ -23,8 +23,8 @@ void cd(int socket, comando *cmd){
 	}
 }
 
-void lcd(comando *cmd) {	
-	if ((chdir ((char*) cmd->arq)) == 0) {		
+void lcd(comando *cmd) {
+	if ((chdir ((char*) cmd->arq)) == 0) {
 	} else {
 			printf ("Diretorio %s nao existe\n", cmd->arq);
 	}
@@ -40,18 +40,18 @@ char *get_ls_string(DIR *d, int lista, int todos){
 	int tamTotal = 1;
 	char *string_ls;
 	string_ls = malloc(sizeof(char)*1);
-	string_ls[0] = '\0';	
+	string_ls[0] = '\0';
 
   	if (d){
 	    while ((ent = readdir(d)) != NULL){
     		//se nao estiver marcado o all no ls retira os arquivos ocultos
     		if(!(todos) &&
     			(!strcmp(ent->d_name, "..")
-    			|| ent->d_name[0] == '.')) 
-    				continue;    		    	
+    			|| ent->d_name[0] == '.'))
+    				continue;
 
-    		if(stat(ent->d_name,&statbuf) < 0){				
-				printf("erro ao recuperar atributos arquivo\n");    			
+    		if(stat(ent->d_name,&statbuf) < 0){
+				printf("erro ao recuperar atributos arquivo\n");
 				return;
     		}
 
@@ -66,18 +66,18 @@ char *get_ls_string(DIR *d, int lista, int todos){
 
     			string_ls = realloc(string_ls, sizeof(char) * tamTotal);
 
-    			sprintf(string_ls,"%s%s %d %s %s ", 
+    			sprintf(string_ls,"%s%s %d %s %s ",
     				string_ls,
 	      			get_permissoes_arq(statbuf) ,
-	      			get_links(statbuf), 
+	      			get_links(statbuf),
 	      			get_owner(statbuf),
 	      			get_group(statbuf));
-	      			
+
     			    //adiciona espacos para formatar o tamanho do arquivo
 		    	while(j++ < 11 - strlen(get_file_size(statbuf))){
 		    		tamTotal += 1;
 		    		string_ls = realloc(string_ls, sizeof(char) * tamTotal);
-		    		sprintf(string_ls,"%s ",string_ls);							    	
+		    		sprintf(string_ls,"%s ",string_ls);
 
 		    	}
 		    	//add tamanho dos espacos e\n
@@ -87,7 +87,7 @@ char *get_ls_string(DIR *d, int lista, int todos){
 		    	tamTotal += strlen(ent->d_name);
 
 		    	string_ls = realloc(string_ls, sizeof(char) * tamTotal);
-	      			
+
 		    	sprintf(string_ls, "%s %s %s %s\n",
 		    		string_ls,
 		    		get_file_size(statbuf),
@@ -98,7 +98,7 @@ char *get_ls_string(DIR *d, int lista, int todos){
     		}
     		else{
     			tamTotal += strlen(ent->d_name);
-    			tamTotal += 4; 
+    			tamTotal += 4;
     			string_ls = realloc(string_ls, sizeof(char) * tamTotal);
     			sprintf(string_ls,"%s%s    ",string_ls, ent->d_name);
     		}
@@ -108,10 +108,10 @@ char *get_ls_string(DIR *d, int lista, int todos){
     		tamTotal +=1;
 	    	string_ls = realloc(string_ls, sizeof(char) * tamTotal);
 
-    		sprintf(string_ls,"%s\n",string_ls);	
+    		sprintf(string_ls,"%s\n",string_ls);
     	}
-   	
-   		return string_ls; 	 
+
+   		return string_ls;
 	}
 }
 
@@ -124,36 +124,36 @@ void lls(comando *cmd) {
   	if(d){
   		int todos = cmd->opcao == ALL ? 1 : 0;
   		int lista = cmd->opcao == LIST ? 1 : 0;
-  	
-  		printf("%s", get_ls_string(d, lista, todos)); 
 
-  		closedir(d);	
-  	}  	 	
+  		printf("%s", get_ls_string(d, lista, todos));
+
+  		closedir(d);
+  	}
 }
 
 
 
 comando* get_comando(){
 	comando *cmd;
-	char *entrada;	
-	char *com;	
+	char *entrada;
+	char *com;
 
 	entrada = malloc(sizeof(char) * 1024);
 
 	gets(entrada);
 
 	cmd = malloc(sizeof(comando));
-		
-	com = strtok(entrada, " ");	
 
-	com = trimwhitespace(com);	
+	com = strtok(entrada, " ");
+
+	com = trimwhitespace(com);
 
 	if(!strcmp(com, "lls"))
-		cmd->tipo = LLS;		
+		cmd->tipo = LLS;
 	else if(!strcmp(com, "lcd"))
 		cmd->tipo = LCD;
 	else if(!strcmp(com, "cd")){
-		cmd->tipo = CD;		
+		cmd->tipo = CD;
 	}
 	else if(!strcmp(com, "ls")){
 		cmd->tipo = LS;
@@ -164,31 +164,31 @@ comando* get_comando(){
 		cmd->tipo = GET;
 	else if(!strcmp(com, "exit"))
 		cmd->tipo = EXIT;
-	else{		
-		cmd->tipo = INVALIDO;		
+	else{
+		cmd->tipo = INVALIDO;
 		return cmd;
-	}		
+	}
 	cmd->opcao = 0;
 	cmd->arq = NULL;
 	com = strtok(NULL, " ");
-	
+
 	if(com){
-		com = trimwhitespace(com);							
+		com = trimwhitespace(com);
 
 		if(!strcmp(com, "-l"))
 			cmd->opcao = LIST;
 		else if(!strcmp(com, "-la"))
 			cmd->opcao = ALL;
-		else if((cmd->tipo == GET || cmd->tipo == PUT 
+		else if((cmd->tipo == GET || cmd->tipo == PUT
 				|| cmd->tipo == LCD || cmd->tipo== CD))
-			cmd->arq = com;						
+			cmd->arq = com;
 	}
 
 	//se pediu get ou put e não informou o arquivo
-	if((cmd->tipo == GET || cmd->tipo == PUT 
-		|| cmd->tipo == LCD || cmd->tipo== CD) 
+	if((cmd->tipo == GET || cmd->tipo == PUT
+		|| cmd->tipo == LCD || cmd->tipo== CD)
 			&& cmd->arq == NULL)
-		cmd->tipo = INVALIDO;			
+		cmd->tipo = INVALIDO;
 
 	return cmd;
 }
@@ -208,7 +208,7 @@ void server_ls(int socket, unsigned char* dados){
 
 	//testa se ls é ls -l
 	if(dados[0] == 'l'){
-		lista = 1; 
+		lista = 1;
 	}
 	else if(dados[0] == 'a'){
 		todos = 1;
@@ -218,42 +218,45 @@ void server_ls(int socket, unsigned char* dados){
 
 	if(d){
 
-		resul = get_ls_string(d, lista, todos);		
+		resul = get_ls_string(d, lista, todos);
 
-		tam_total = strlen(resul);	
+		tam_total = strlen(resul);
 
 		if(tam_total > MAX_DADOS){
 			quebra = 0;
 			tam_total = strlen(resul);
-			partes = tam_total / MAX_DADOS + (tam_total%MAX_DADOS == 0 ? 0 : 1);
+			partes = tam_total / MAX_DADOS + (tam_total % MAX_DADOS == 0 ? 0 : 1);
 
 			for(j = 0; j < partes; j++){
 
 				i = 0;
 
 				parte = malloc(MAX_DADOS + 1);
-				
+
 				//quebra de 63 em 63 para envio
 				while(quebra < tam_total && i < MAX_DADOS){
 					parte[i] = resul[quebra];
 					quebra++;
 					i++;
 				}
-	            p = monta_pacote(MOSTRA, parte, strlen(parte));
-				envia_pacote(socket, p);	
+
+	      p = monta_pacote(MOSTRA, parte, strlen(parte));
+				envia_pacote(socket, p);
+				free(p->dados);
+				free(p);
 			}
-						
+
 
 		}else{
 			p = monta_pacote(MOSTRA, resul, strlen(resul));
-			envia_pacote(socket, p);			
+			envia_pacote(socket, p);
 		}
-		p = monta_pacote(FIM_TXT, resul, strlen(resul));
-		envia_pacote(socket, p);			
+		p = monta_pacote(FIM_TXT, NULL, 0);
+		envia_pacote(socket, p);
 
 		closedir(d);
 	}
-	
+
 }
 
 void server_cd(int socket, unsigned char* dados){
@@ -265,14 +268,14 @@ void server_cd(int socket, unsigned char* dados){
 	p = monta_pacote(0, cd_erro, 1);
 
 	if ((chdir ((char*) dados)) == 0) {
-		cd_erro[0] = ' ';		
+		cd_erro[0] = ' ';
 		p->tipo = OK;
 
 	} else {
-		cd_erro[0] = '1'; 
+		cd_erro[0] = '1';
 		p->tipo = ERR;
-		
-	}	
+
+	}
 
 	envia_pacote(socket, p);
 }
@@ -280,7 +283,7 @@ void server_cd(int socket, unsigned char* dados){
 
 void ls(int socket, comando *cmd){
 	pacote *p;
-	char *opcao = malloc(sizeof(char) * 2);
+	char *opcao = malloc(sizeof(char));
 
 	if(cmd->opcao == LIST)
 		opcao[0] = 'l';
@@ -288,7 +291,6 @@ void ls(int socket, comando *cmd){
 		opcao[0] = 'a';
 	else
 		opcao[0] = ' ';
-	opcao[1] = '\0';
 
 	p = monta_pacote(LS, opcao, strlen(opcao));
 
@@ -298,21 +300,22 @@ void ls(int socket, comando *cmd){
 
 	do{
 		printf("%s", p->dados);
-
+		free(p->dados);
+		free(p);
 		p = recebe_pacote(socket);
 	}while(p->tipo == MOSTRA);
-	
+
 
 	if(!p->tipo == FIM_TXT)
-		printf("erro no final do LS\n");		
-		
+		printf("erro no final do LS\n");
+
 
 }
 
 
 
 void put(int socket, unsigned char *nome_arq){
-	
+
 	long int tam_arq = 0;
 	FILE *fp;
 	pacote *p;
@@ -330,17 +333,17 @@ void put(int socket, unsigned char *nome_arq){
 
 	fseek (fp, 0, SEEK_END);
 	tam_arq = ftell(fp);
-	
+
 	p = monta_pacote(PUT, (unsigned char*) nome_arq, strlen (nome_arq));
 
 	envia_pacote(socket, p);
-		
+
 	rewind (fp);
 
 	//free(p->dados);
 	//free(p);
 
-			
+
 	while (1) {
 		//pega o que resta do arquivo
 		tam_parte = tam_arq - ftell(fp);
@@ -356,19 +359,19 @@ void put(int socket, unsigned char *nome_arq){
 		fread (parte, 1, tam_parte, fp);
 
 		p = monta_pacote(DADOS, parte, tam_parte);
-		
+
 		envia_pacote(socket, p);
 
 		//free(parte);
 		//free(p->dados);
-		//free(p);			
+		//free(p);
 	}
 
-	fclose (fp);	
+	fclose (fp);
 
 	p = monta_pacote(FIM_TXT, &tam_arq,1);
 
-	envia_pacote(socket, p);		
+	envia_pacote(socket, p);
 
 }
 
@@ -394,7 +397,7 @@ void recebe_arquivo(int socket, unsigned char *nome_arq) {
         printf ("Nao eh possivel criar o arquivo %s\n",nome_arq);
         return;
     }
-	    
+
 
 	while (1) {
 		p = recebe_pacote(socket);

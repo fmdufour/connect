@@ -2,7 +2,7 @@
 
 
 void start_client(){
-	char cwd[1024];
+	char *cwd;
 	comando *cmd;
 	int socket;
 
@@ -10,14 +10,16 @@ void start_client(){
 	socket = socket_create(DEVICE);
 
 	printf("Client conectado...\n");
-	
+
 	print_options();
-	      		
+
 	while(1){
+
+		cwd = malloc(sizeof(char) * 1024);
 		get_diretorio_atual(cwd);
 
 		printf("%s$ ", cwd);
-		
+
 		cmd = get_comando();
 
 		switch(cmd->tipo){
@@ -37,12 +39,14 @@ void start_client(){
 				get(socket, cmd->arq);
 				break;
 			case PUT:
-				put(socket, cmd->arq);				
+				put(socket, cmd->arq);
 				break;
 			case INVALIDO:
 				printf("Comando invalido\n");
 				break;
 		}
+
+		free(cwd);
 
 	}
 }

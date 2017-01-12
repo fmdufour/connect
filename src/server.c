@@ -27,7 +27,7 @@ void start_server(){
 	socket = socket_create(DEVICE);
     while(1){
 
-        p = recebe_pacote(socket);
+        p = recebe_pacote(socket, 1);
 
         switch(p->tipo){
             case LS:
@@ -41,12 +41,10 @@ void start_server(){
                 recebe_arquivo(socket, p->dados);
                 break;
             case GET:
-                printf("Enviando arquivo %s ...\n", p->dados);                
+                printf("Enviando arquivo %s ...\n", p->dados);
                 put(socket, p->dados);
                 break;
 
         }
     }
 }
-
-

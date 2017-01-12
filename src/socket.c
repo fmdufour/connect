@@ -7,7 +7,7 @@ int socket_create (const char *device) {
     struct ifreq ifr;
     struct sockaddr_ll sll;
 
-	if((sock = socket(PF_PACKET, SOCK_RAW, 0)) == -1) {		
+	if((sock = socket(PF_PACKET, SOCK_RAW, 0)) == -1) {
 	    perror("socket");
 	    exit(1);
 	}
@@ -34,8 +34,19 @@ int socket_create (const char *device) {
 	memset(&mr, 0, sizeof(mr));
 	mr.mr_ifindex = device_id;
 	mr.mr_type = PACKET_MR_PROMISC;
+
 	if (setsockopt(sock, SOL_PACKET, PACKET_ADD_MEMBERSHIP,
 		&mr, sizeof(mr)) == -1) {
+			perror("setsockopt");
+			exit(1);
+	}
+	//TIMEOUT SOCKET
+	struct timeval timeout;
+	timeout.tv_sec = 2;
+	timeout.tv_usec = 0;
+
+	if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO,
+		&timeout, sizeof(timeout)) == -1) {
 			perror("setsockopt");
 			exit(1);
 	}

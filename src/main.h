@@ -57,6 +57,7 @@
 #define MAX_DADOS 63
 #define MAX_SEQ 31
 #define MAX_PACOTE 67
+#define TENTATIVAS_TIMEOUT 5
 
 typedef struct _comando{
 	int tipo;
@@ -100,5 +101,5 @@ int socket_create (const char *device);
 
 //PROTOCOL
 //pacote *monta_pacote(int tipo, char *dados, int tamanho);
-pacote* recebe_pacote(int socket);
+pacote* recebe_pacote(int socket, int modo);
 void recebe_arquivo(int socket, unsigned char * nome_arq);

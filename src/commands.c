@@ -6,11 +6,13 @@ void cd(int socket, comando *cmd){
 
 	pacote *p = monta_pacote(CD, (unsigned char*)cmd->arq, strlen(cmd->arq));
 
-	envia_pacote(socket, p);
+	if(!envia_pacote(socket, p))
+		return;
 
 	free(p);
 
-	p = recebe_pacote(socket);
+	if((p = recebe_pacote(socket, 0)) == NULL)
+		return;
 
 	if(p->tipo == OK){
 		printf("CD realizado para %s\n", cmd->arq);
@@ -18,9 +20,9 @@ void cd(int socket, comando *cmd){
 	else if(p->tipo == ERR){
 		if(p->dados[0] == '1')
 			printf("A pasta %s nao existe no servidor\n", cmd->arq);
-		//else
-			//printf("Erro de permissao para acessar %s", cmd->arq);
 	}
+
+	free(p);
 }
 
 void lcd(comando *cmd) {
@@ -241,18 +243,27 @@ void server_ls(int socket, unsigned char* dados){
 				}
 
 	      p = monta_pacote(MOSTRA, parte, strlen(parte));
-				envia_pacote(socket, p);
-				free(p->dados);
-				free(p);
-			}
 
+				if(!envia_pacote(socket, p))
+					return;
+
+				free_packet(p);
+			}
 
 		}else{
 			p = monta_pacote(MOSTRA, resul, strlen(resul));
-			envia_pacote(socket, p);
+
+			if(!envia_pacote(socket, p))
+				return;
+
+			//free_packet(p);
 		}
 		p = monta_pacote(FIM_TXT, NULL, 0);
-		envia_pacote(socket, p);
+
+		if(!envia_pacote(socket, p))
+			return;
+
+		//free_packet(p);
 
 		closedir(d);
 	}
@@ -263,7 +274,7 @@ void server_cd(int socket, unsigned char* dados){
 	pacote *p;
 	char *cd_erro = malloc(sizeof(char));
 
-	printf("cd para ->%s\n", dados);
+	printf("cd para -> %s\n", dados);
 
 	p = monta_pacote(0, cd_erro, 1);
 
@@ -277,7 +288,8 @@ void server_cd(int socket, unsigned char* dados){
 
 	}
 
-	envia_pacote(socket, p);
+	if(!envia_pacote(socket, p))
+		return;
 }
 
 
@@ -294,24 +306,27 @@ void ls(int socket, comando *cmd){
 
 	p = monta_pacote(LS, opcao, strlen(opcao));
 
-	envia_pacote(socket, p);
+	if(!envia_pacote(socket, p))
+		return;
+
 	free(p);
-	p = recebe_pacote(socket);
+
+	if((p = recebe_pacote(socket, 0)) == NULL)
+		return;
 
 	do{
 		printf("%s", p->dados);
-		free(p->dados);
-		free(p);
-		p = recebe_pacote(socket);
+		free_packet(p);
+
+		if((p = recebe_pacote(socket, 0)) == NULL)
+			return;
 	}while(p->tipo == MOSTRA);
 
 
 	if(!p->tipo == FIM_TXT)
 		printf("erro no final do LS\n");
 
-
 }
-
 
 
 void put(int socket, unsigned char *nome_arq){
@@ -326,23 +341,22 @@ void put(int socket, unsigned char *nome_arq){
 
 	parte = malloc(MAX_DADOS);
 
-    if ((fp = fopen (nome_arq, "r")) == NULL) {
-        printf("Arquivo %s nao existe\n",nome_arq);
-        return;
-    }
+  if ((fp = fopen (nome_arq, "r")) == NULL) {
+    printf("Arquivo %s nao existe\n",nome_arq);
+    return;
+  }
 
 	fseek (fp, 0, SEEK_END);
 	tam_arq = ftell(fp);
 
 	p = monta_pacote(PUT, (unsigned char*) nome_arq, strlen (nome_arq));
 
-	envia_pacote(socket, p);
+	if(!envia_pacote(socket, p))
+		return;
 
 	rewind (fp);
 
-	//free(p->dados);
-	//free(p);
-
+	//free_packet(p);
 
 	while (1) {
 		//pega o que resta do arquivo
@@ -354,25 +368,22 @@ void put(int socket, unsigned char *nome_arq){
 		if (tam_parte > MAX_DADOS)
 			tam_parte = MAX_DADOS;
 
-		//parte = malloc(sizeof(tam_parte) + 1);
-
 		fread (parte, 1, tam_parte, fp);
 
 		p = monta_pacote(DADOS, parte, tam_parte);
 
 		envia_pacote(socket, p);
 
-		//free(parte);
-		//free(p->dados);
-		//free(p);
 	}
 
 	fclose (fp);
 
+	free(parte);
+
 	p = monta_pacote(FIM_TXT, &tam_arq,1);
 
-	envia_pacote(socket, p);
-
+	if(!envia_pacote(socket, p))
+		return;
 }
 
 void get(int socket, unsigned char* nome_arq){
@@ -380,7 +391,8 @@ void get(int socket, unsigned char* nome_arq){
 	p = monta_pacote(GET,
 		(unsigned char*) nome_arq, strlen(nome_arq));
 
-	envia_pacote(socket, p);
+	if(!envia_pacote(socket, p))
+		return;
 
 	recebe_arquivo(socket, nome_arq);
 }
@@ -393,28 +405,26 @@ void recebe_arquivo(int socket, unsigned char *nome_arq) {
 	FILE* fp;
 
 
-    if ((fp = fopen ((char*) nome_arq, "w")) == NULL) {
-        printf ("Nao eh possivel criar o arquivo %s\n",nome_arq);
-        return;
-    }
+  if ((fp = fopen ((char*) nome_arq, "w")) == NULL) {
+      printf ("Nao eh possivel criar o arquivo %s\n",nome_arq);
+      return;
+  }
 
 
 	while (1) {
-		p = recebe_pacote(socket);
+		if((p = recebe_pacote(socket, 0)) == NULL)
+			return;
 
 		if (p->tipo == DADOS)
 			fwrite (p->dados, 1, p->tam, fp);
-
 		else if (p->tipo == FIM_TXT) {
-			tam_arq = atol ((unsigned char *) p->dados);
 			break;
 		}
 
-		//free(p->dados);
-		//free(p);
+		free_packet(p);
 	}
 
-    fseek (fp, 0, SEEK_END);
+  fseek (fp, 0, SEEK_END);
 
 	printf ("Arquivo %s transferido com sucesso\n", nome_arq);
 

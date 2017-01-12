@@ -69,89 +69,74 @@ int envia_pacote(int socket, pacote *p){
 
 	pacote *resp;
 
-
 	unsigned char *buff = bufferiza_pacote(p);
 
-		if ((send (socket, buff, MAX_PACOTE, 0)) == -1) {
-			perror("send");
-		}
-		//printf("erro: send: %s\n", strerror(errno));
-		//usleep (random * PACKET_TIME);
-		//continue;
+	if ((send (socket, buff, MAX_PACOTE, 0)) == -1) {
+		perror("send");
+	}
 
-		if (p->tipo == ACK)
-			sequencia = (sequencia%MAX_SEQ) + 1;
+	if (p->tipo == ACK)
+		sequencia = (sequencia%MAX_SEQ) + 1;
 
-		if (p->tipo == ACK || p->tipo == NACK)
-			return 1;
+	if (p->tipo == ACK || p->tipo == NACK)
+		return 1;
 
-		//if ((status = poll (&pfd, 1, (int) random)) < 0 ) {
-		//	printf("erro: poll: %s\n", strerror(errno));
-		//	usleep (random * PACKET_TIME);
-		//	continue;
-		//}
+	if ((resp = recebe_pacote(socket, 0)) == NULL) {
+		//Timeout resposta
+		return False;
+	}
 
-		if ((resp = recebe_pacote(socket)) == NULL) {
-			printf("erro: packet_recv: packet_recv: erro no recebimento");
-			return;
-		}
-
-		if (resp->tipo == NACK) {
-			printf("erro: packet_recv: nack retornado\n");
-		}
-
-	//if(DEBUG)
-		//printf("Pacote enviado %d\n", p->seq);
+	if (resp->tipo == NACK) {
+		printf("erro: packet_recv: nack retornado\n");
+	}
 
 	return True;
 }
 
 
-pacote* recebe_pacote(int socket){
-		pacote *p;
-		unsigned char *buffer = malloc (MAX_PACOTE * sizeof(char));
+pacote* recebe_pacote(int socket, int server){
+	pacote *p;
+	unsigned char *buffer = malloc (MAX_PACOTE * sizeof(char));
+	int tentativas = 0;
 
-		while (1) {
-	  	//printf("Esperando pacote...\n");
-			if ((recv (socket, buffer, MAX_PACOTE, 0)) < 0) {
-				printf("Erro RECV -> recebe_pacote()\n");
+	while (1) {
+		//printf("Esperando pacote...\n");
+		if ((recv (socket, buffer, MAX_PACOTE, 0)) < 0) {
+			if (server){
+				//se for o servidor deve ignorar o timeout de espera
 				continue;
 			}
 
-			//printf("Pacote Recebido\n");
+			printf("%da Tentativa de envio Falhou\n", ++tentativas);
 
-			p = desbufferiza_pacote(buffer);
-
-			//print_pacote(p);
-
-			printf("Tipo %d\n -> Dados %s\n", p->tipo, p->dados);
-
-
-		  if (p->marca != MARCA){
-		  	free(p->dados);
-				free(p);
-				continue;
-		  }
-
-			if (p->seq != sequencia){
-		    free(p->dados);
-				free(p);
-				continue;
+			if(tentativas == TENTATIVAS_TIMEOUT){
+				printf("Envio falhou após %d tentativas...\n", tentativas);
+				return NULL;
 			}
-
-	        //if (packet_parity(p) != p->par)
-	        //    continue;
-
-			if (p->tipo == ACK) {
-				sequencia = (sequencia%MAX_SEQ) +1;
-				return p;
-			}
-
-			if (p->tipo != ACK && p->tipo != NACK) {
-				//envia pacote para sinalizar aceitacao
-				pacote *resp = monta_pacote(ACK, NULL, 0);
-				if (envia_pacote(socket, resp))
-					return p;
-			}
+			continue;
 		}
+			//printf("Pacote Recebido\n");
+		p = desbufferiza_pacote(buffer);
+			//print_pacote(p);
+		if (p->marca != MARCA){
+	  	free_packet(p);
+			continue;
+	  }
+		if (p->seq != sequencia){
+			free_packet(p);
+			continue;
+		}
+	        //if (packet_parity(p) != p->par)
+        //    continue;
+		if (p->tipo == ACK) {
+			sequencia = (sequencia%MAX_SEQ) +1;
+			return p;
+		}
+		if (p->tipo != ACK && p->tipo != NACK) {
+			//envia pacote para sinalizar aceitacao
+			pacote *resp = monta_pacote(ACK, NULL, 0);
+			if (envia_pacote(socket, resp))
+				return p;
+		}
+	}
 }

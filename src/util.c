@@ -10,7 +10,7 @@ void print_options(){
 	printf("lcd <pasta>\n");
 	printf("get <arquivo>\n");
 	printf("put <arquivo>\n");
-	printf("----------------------\n");	
+	printf("----------------------\n");
 }
 
 int modo_exec_valido(char **argc){
@@ -24,14 +24,17 @@ int modo_exec_valido(char **argc){
 
 void get_diretorio_atual(char* cwd){
 	if (getcwd(cwd, 1024) == NULL){
-		perror("getcwd() error");	
-	}       	   	
+		perror("getcwd() error");
+	}
 }
 
 
 char *trimwhitespace(char *str)
 {
   char *end;
+
+	if(str == NULL)  // blank?
+		return "";
 
   // Trim leading space
   while(isspace((unsigned char)*str)) str++;
@@ -65,7 +68,7 @@ char * get_permissoes_arq(struct stat statbuf){
     perm[8] = statbuf.st_mode & S_IWOTH ? 'w' : '-';
     perm[9] = statbuf.st_mode & S_IXOTH ? 'x' : '-';
 	perm[10] = '\0';
-	
+
 	return perm;
 }
 
@@ -75,7 +78,7 @@ int get_links(struct stat statbuf){
 
 char* get_owner(struct stat statbuf){
 	struct passwd  *pwd;
-	
+
 	if ((pwd = getpwuid(statbuf.st_uid)) != NULL)
 	    return (char*)pwd->pw_name;
 	else
@@ -97,11 +100,11 @@ char* get_file_size(struct stat statbuf){
 	char *tam = malloc(sizeof(char)*11);
 
 	sprintf(tam, "%d", statbuf.st_size);
-	
+
 	return tam;
 }
 
-char* get_date(struct stat statbuf){	
+char* get_date(struct stat statbuf){
 	struct tm      *tm;
 	int i = 0;
 	char datestring[255];
@@ -123,6 +126,7 @@ char* get_date(struct stat statbuf){
     return data;
 }
 
-
-
-
+void free_packet(struct pacote *p){
+	free(p->dados);
+	free(p);
+}
